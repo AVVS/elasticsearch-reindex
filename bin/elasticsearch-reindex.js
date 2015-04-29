@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
 var cli           = require('commander'),
-    elasticsearch = require('elasticsearch')
-    async         = require('async'),
+    elasticsearch = require('elasticsearch'),
     cluster       = require('cluster'),
     moment        = require('moment'),
-    _             = require('underscore'),
+    _             = require('lodash'),
     bunyan        = require('bunyan'),
     ProgressBar   = require('progress'),
     fs            = require('fs'),
@@ -26,6 +25,7 @@ cli
 .option('-r, --trace', 'default false', false)
 .option('-n, --max_docs [value]', 'default -1 unlimited', -1)
 .option('-v, --api_ver [value]', 'default 1.5', '1.5')
+.option('-s, --sockets [value]', 'default 50', 50)
 .parse(process.argv);
 
 var logger        = bunyan.createLogger({
@@ -106,12 +106,24 @@ if (cluster.isMaster) {
 
   var from_uri      = new URI(cli.from),
       to_uri     = new URI(cli.to),
-      from_client   = new elasticsearch.Client({host:from_uri.host(), requestTimeout:cli.request_timeout, apiVersion: cli.api_ver }),
-      to_client  = new elasticsearch.Client({host:to_uri.host(), requestTimeout:cli.request_timeout, apiVersion: cli.api_ver }),
+      from_client   = new elasticsearch.Client({
+        host: from_uri.host(),
+        requestTimeout:cli.request_timeout,
+        apiVersion: cli.api_ver
+      }),
+      to_client  = new elasticsearch.Client({
+        host:to_uri.host(),
+        requestTimeout:cli.request_timeout,
+        apiVersion: cli.api_ver,
+        sniffOnStart: true,
+        maxSockets: options.sockets + 1,
+        minSockets:  options.sockets
+      }),
       from_path     = (function() { var tmp = from_uri.path().split('/'); return { index:tmp[1], type:tmp[2]}})(),
       to_path    = (function() { var tmp = to_uri.path().split('/'); return { index:tmp[1], type:tmp[2]}})(),
       processed_total        = 0,
       processed_failed       = 0;
+
   var scan_options = {
         index       : from_path.index,
         type        : from_path.type,
