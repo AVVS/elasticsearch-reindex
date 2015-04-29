@@ -26,6 +26,7 @@ cli
 .option('-n, --max_docs [value]', 'default -1 unlimited', -1)
 .option('-v, --api_ver [value]', 'default 1.5', '1.5')
 .option('--sockets [value]', 'default 50', 50)
+.option('--no_bulk', 'default false', false)
 .parse(process.argv);
 
 var logger        = bunyan.createLogger({
@@ -180,15 +181,7 @@ if (cluster.isMaster) {
       processed_total = bar.total;
     }
 
-    reindexer.index(docs, {
-      concurrency : cli.concurrency,
-      bulk        : cli.bulk,
-      client      : to_client,
-      indexer     : custom_indexer ? custom_indexer.index : null,
-      index       : to_path.index,
-      type        : to_path.type
-    }, function(err) {
-
+    function iterate(err) {
       if (err) {
         logger.fatal(err);
         console.log("Reindex error: " + err);
@@ -211,7 +204,27 @@ if (cluster.isMaster) {
         logger.info(msg);
         process.exit();
       }
+    }
 
-    });
+    if (opts.no_bulk) {
+      return reindexer.no_bulk(docs, {
+        concurrency: cli.concurrency,
+        client: to_client,
+        indexer: custom_indexer ? custom_indexer.index : null,
+        index: to_path.index,
+        type: to_path.type
+      }, iterate);
+    }
+
+    reindexer.index(docs, {
+      concurrency : cli.concurrency,
+      bulk        : cli.bulk,
+      client      : to_client,
+      indexer     : custom_indexer ? custom_indexer.index : null,
+      index       : to_path.index,
+      type        : to_path.type
+    }, iterate);
+
   });
+
 }
