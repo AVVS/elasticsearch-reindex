@@ -164,7 +164,8 @@ if (cluster.isMaster) {
 
     if (err) {
       logger.fatal(err);
-      return console.log("Scroll error:" + err);
+      console.log("Scroll error:" + err);
+      return process.exit(1);
     }
 
     if (!res.hits.total) {
@@ -206,7 +207,7 @@ if (cluster.isMaster) {
       }
     }
 
-    if (opts.no_bulk) {
+    if (cli.no_bulk) {
       return reindexer.no_bulk(docs, {
         concurrency: cli.concurrency,
         client: to_client,
