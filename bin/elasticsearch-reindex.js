@@ -115,7 +115,6 @@ if (cluster.isMaster) {
         host:to_uri.host(),
         requestTimeout:cli.request_timeout,
         apiVersion: cli.api_ver,
-        sniffOnStart: true,
         maxSockets: cli.sockets + 1,
         minSockets:  cli.sockets
       }),
