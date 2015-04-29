@@ -97,7 +97,6 @@ if (cluster.isMaster) {
 } else {
   var range = null;
   var shard_name = '';
-  if (true) {}
   if (process.env['worker_arg']) {
     worker_arg = JSON.parse(process.env['worker_arg']);
     range = worker_arg.range;
@@ -149,6 +148,7 @@ if (cluster.isMaster) {
   });
 
   reindexer.on('error', function(error) {
+    console.error(error);
     logger.error(error);
   });
 
@@ -158,15 +158,18 @@ if (cluster.isMaster) {
   });
 
   from_client.search(scan_options, function scroll_fetch(err, res) {
+
     if (err) {
       logger.fatal(err);
       return console.log("Scroll error:" + err);
     }
+
     if (!res.hits.total) {
       logger.info('No documents can be found!');
       console.log('No documents can be found!');
       return process.exit();
     }
+
     bar.total = cli.max_docs == -1 ? res.hits.total : (cli.max_docs > res.hits.total ? res.hits.total : cli.max_docs);
     var docs = res.hits.hits;
     processed_total = processed_total + docs.length;
@@ -174,6 +177,7 @@ if (cluster.isMaster) {
       docs = docs.slice(0, bar.total - processed_total);
       processed_total = bar.total;
     }
+
     reindexer.index(docs, {
       concurrency : cli.concurrency,
       bulk        : cli.bulk,
@@ -182,15 +186,20 @@ if (cluster.isMaster) {
       index       : to_path.index,
       type        : to_path.type
     }, function(err) {
+
       if (err) {
         logger.fatal(err);
-        return console.log("Reindex error: " + err);
+        console.log("Reindex error: " + err);
+        return process.exit(1);
       }
+
       if (processed_total < bar.total) {
+
         from_client.scroll({
           body : res._scroll_id,
           scroll : cli.scroll
         }, scroll_fetch);
+
       } else {
         var msg = "    " + shard_name + " Total " + processed_total + " documents have been processed!"
         if (processed_failed) {
@@ -200,6 +209,7 @@ if (cluster.isMaster) {
         logger.info(msg);
         process.exit();
       }
+
     });
   });
 }
