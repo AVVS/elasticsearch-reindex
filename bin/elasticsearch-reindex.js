@@ -25,7 +25,7 @@ cli
 .option('-r, --trace', 'default false', false)
 .option('-n, --max_docs [value]', 'default -1 unlimited', -1)
 .option('-v, --api_ver [value]', 'default 1.5', '1.5')
-.option('-s, --sockets [value]', 'default 50', 50)
+.option('--sockets [value]', 'default 50', 50)
 .parse(process.argv);
 
 var logger        = bunyan.createLogger({
