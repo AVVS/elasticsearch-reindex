@@ -108,14 +108,16 @@ if (cluster.isMaster) {
       from_client   = new elasticsearch.Client({
         host: from_uri.host(),
         requestTimeout:cli.request_timeout,
-        apiVersion: cli.api_ver
+        apiVersion: cli.api_ver,
+        deadTimeout: 3000
       }),
       to_client  = new elasticsearch.Client({
         host:to_uri.host(),
         requestTimeout:cli.request_timeout,
         apiVersion: cli.api_ver,
         maxSockets: cli.sockets + 1,
-        minSockets:  cli.sockets
+        minSockets:  cli.sockets,
+        deadTimeout: 3000
       }),
       from_path     = (function() { var tmp = from_uri.path().split('/'); return { index:tmp[1], type:tmp[2]}})(),
       to_path    = (function() { var tmp = to_uri.path().split('/'); return { index:tmp[1], type:tmp[2]}})(),
