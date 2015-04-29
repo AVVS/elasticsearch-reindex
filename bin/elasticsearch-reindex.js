@@ -116,8 +116,8 @@ if (cluster.isMaster) {
         requestTimeout:cli.request_timeout,
         apiVersion: cli.api_ver,
         sniffOnStart: true,
-        maxSockets: options.sockets + 1,
-        minSockets:  options.sockets
+        maxSockets: cli.sockets + 1,
+        minSockets:  cli.sockets
       }),
       from_path     = (function() { var tmp = from_uri.path().split('/'); return { index:tmp[1], type:tmp[2]}})(),
       to_path    = (function() { var tmp = to_uri.path().split('/'); return { index:tmp[1], type:tmp[2]}})(),
