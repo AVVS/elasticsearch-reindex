@@ -140,6 +140,9 @@ if (cluster.isMaster) {
 
   if (custom_indexer && custom_indexer.query) {
     scan_options.body = _.extend(scan_options.body, custom_indexer.query);
+    if (range) {
+      scan_options.body.post_filter = { range: range };
+    }
   }
 
   var reindexer = new Indexer();
